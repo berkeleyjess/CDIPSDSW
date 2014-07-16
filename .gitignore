@@ -1,0 +1,29 @@
+# Files to ignore
+*.pyc
+*.npy
+*.csv
+
+# Numerous always-ignore extensions
+*.diff
+*.err
+*.orig
+*.log
+*.rej
+*.swo
+*.swp
+*.vi
+*~
+*.sass-cache
+
+# OS or Editor folders
+.DS_Store
+.cache
+.project
+.settings
+.tmproj
+Thumbs.db
+
+# Folders to Ignore
+.hg
+.svn
+.CVS

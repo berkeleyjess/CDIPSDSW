@@ -1,6 +1,8 @@
 import numpy
 
 
+ #  Clients: Gtalk = 1, Facebook = 2, InstaEDU = 3
+ #  Timezones: See pytz.common_timezones
 class Ping:
     def __init__(self, ping_id, lesson_id, lesson_subject, tutor_id, client, available,
                  available_now, last_impression_time, last_seen_online_time, timezone,
@@ -15,6 +17,7 @@ class Ping:
         self.last_impression_time = last_impression_time
         self.last_seen_online_time = last_seen_online_time
         self.timezone = timezone
+
         self.time_clicked = time_clicked
         self.time_sent_success = time_sent_success
         self.time_clicked_score = time_clicked_score

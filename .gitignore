@@ -2,6 +2,7 @@
 *.pyc
 *.npy
 *.csv
+*.h5
 
 # Numerous always-ignore extensions
 *.diff
@@ -27,3 +28,5 @@ Thumbs.db
 .hg
 .svn
 .CVS
+Data
+

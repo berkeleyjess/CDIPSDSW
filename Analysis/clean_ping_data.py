@@ -17,6 +17,10 @@ The main changes to the columns are:
 - Two new columns give the local time of day in hours past midnight:
   'time_sent_success_local' and 'time_clicked_local'.
 
+- There are two new time zone columns, 'timezone_str' which 
+  gives the time zone location as a string, and 'hours_from_utc'
+  which gives the time zone offset from UTC in hours.
+  
 If you get an error when reading to the end of the ping data,
 try deleting the last row of the CSV file (which is incomplete 
 and seems to cause problems for the read_csv function).
@@ -26,7 +30,9 @@ import numpy as np
 import pandas as pd
 import sys
 sys.path.append('../.')
+import pytz
 import time_zones
+import datetime
 
 def parse_date_and_time(date_or_time, time_or_date):
     """
@@ -64,6 +70,25 @@ def local_time(column):
                 local_datetime.second/3600.
     return return_function
 
+def hours_from_utc(row):
+    """
+    Given a DataFrame row containing a time zone string and 
+    a date (here, the date of the ping is used), return the
+    offset from UTC for that time zone in hours.
+    """
+    timezone = row['timezone_str']
+    timestamp = row['datetime_sent_success']
+    dt = timestamp.to_pydatetime()
+    try:
+        hours = pytz.timezone(timezone).utcoffset(
+            datetime.datetime(dt.year, dt.month, dt.day)). \
+            total_seconds()/3600.
+    except pytz.exceptions.NonExistentTimeError:
+        hours = pytz.timezone(timezone).utcoffset(
+            datetime.datetime(dt.year, dt.month, dt.day), 
+            is_dst=True).total_seconds()/3600.
+    return hours
+    
     
 if __name__ == '__main__':
     import argparse
@@ -120,6 +145,11 @@ if __name__ == '__main__':
     data['time_clicked_local'] = \
         data.apply(local_time('datetime_clicked'), axis=1)
 
+    # add more time zone columns
+    data['timezone_str'] = data.timezone.apply(
+        lambda tz: time_zones.COMMON_TIMEZONES_STR[tz])
+    data['hours_from_utc'] = data.apply(hours_from_utc, axis=1)
+        
     # save the new DataFrame using HDF5
     store = pd.io.pytables.HDFStore('../Data/ping_data_cleaned.h5')
     store['data'] = data

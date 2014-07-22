@@ -18,7 +18,6 @@ import cPickle
 import pytz
 import datetime
 import sys
-sys.path.append('.')
 import time_zones
 
 def local_time(column):

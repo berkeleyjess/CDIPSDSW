@@ -43,6 +43,10 @@ for x in xrange(total_pings):
 print "Building subject dataframe..."
 
 for sub in series_dicts.keys():
+    # Keep only unique entries
+    series_dicts[sub]['lesson_ids'] = list(set(series_dicts[sub]['lesson_ids']))
+    series_dicts[sub]['tutor_ids'] = list(set(series_dicts[sub]['tutor_ids']))
+
     # Form series to go into dataframe
     s = pd.Series(series_dicts[sub])
     df_dict[sub] = s

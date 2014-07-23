@@ -17,8 +17,6 @@ print 'Training...'
 forest = RandomForestClassifier(n_estimators=100)
 forest = forest.fit( train_dat[0::,0:6], train_dat[:,7] )
 
-
-
 print 'Predicting...'
 output = forest.predict(test_dat[0::,0:6])
 

@@ -16,13 +16,22 @@ def nan_to_zeros(df):
     return df
     
 def drop_nan_row(df):
-	"""
-	Given a DataFrame, all rows containing NaN's are 
-	removed from the DataFrame.
-	""" 
-	print df.shape
-	orig_rws=df.shape[0]
-	df=df.dropna(axis=0)
-	remain_rws=df.shape[0]
-	print "Removed ", orig_rws-remain_rws ," rows of data."
-	return df
+    """
+    Given a DataFrame, all rows containing NaN's are 
+    removed from the DataFrame.
+    """
+    print df.shape
+    orig_rws=df.shape[0]
+    df=df.dropna(axis=0)
+    remain_rws=df.shape[0]
+    print "Removed ", orig_rws-remain_rws ," rows of data."
+    return df
+
+def add_ping_availability_int(df):
+    """
+    Sum boolean 'available' and 'available_now' columns
+    of ping DataFrame to get integer 'availability' column.
+    """
+    df['availability'] = df.available.astype(int) + \
+                         df.available_now.astype(int)
+    return df

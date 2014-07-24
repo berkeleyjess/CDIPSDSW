@@ -73,6 +73,11 @@ for ii in range(0,1):
 		
 	# set up cross-validation
 	kfold = cross_validation.StratifiedKFold(labels,n_folds=n_cv)
+	# find minimum test length
+	min_len_test = len(rf_data)
+	for (train, test) in kfold:
+		if len(test) < min_len_test:
+			min_len_test = len(test)
 	
 	#Define the Name of the output file names
 	#The .txt file will hold info on which features are most important
@@ -108,9 +113,10 @@ for ii in range(0,1):
 		h1='test' + str(i)
 		h2='actual' + str(i)
 		h3='prediction' + str(i)
-		outdf[h1]=test
-		outdf[h2]=labels[test]
-		outdf[h3]=prediction
+		# only output up to the minimum test length
+		outdf[h1]=test[:min_len_test]
+		outdf[h2]=labels[test[:min_len_test]]
+		outdf[h3]=prediction[:min_len_test]
 		#=pd.DataFrame({h1:test,h2:labels[test],h3:prediction})
 		
 	outdf.to_csv(csvfilename,index=False)

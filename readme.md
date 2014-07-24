@@ -13,21 +13,21 @@ Organization
 
 All scripts should be run from the base directory.
 
-*Data*
+**Data**  
 Local data files (raw and processed) should be located here
 but not committed to the repository.
 
-*Classes*
+**Classes**  
 Class definitions to set up data structures, and scripts to 
 read raw data from *.npy files and save in pandas DataFrames.
 
-*Analysis*
+**Analysis**  
 Scripts for data processing and analysis.
 
-*PlottingScripts*
+**PlottingScripts**  
 Scripts for data visualization.
 
-*PreliminaryAnalysis*
+**PreliminaryAnalysis**  
 Scripts used for initial data exploration that are no longer being
 maintained and should not be expected to run. Most of the code 
 here is replicated in some form in one of the other directories.

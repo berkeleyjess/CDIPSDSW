@@ -12,8 +12,8 @@ def plot(tutor_data):
     ax = fig.add_subplot(111)
 
     n_subjects = {}
-    for tid in tutor_data.transpose():
-        n_subjects[tid] = len(tutor_data.transpose()[tid].subjects)
+    for tid in tutor_data:
+        n_subjects[tid] = len(tutor_data[tid].subjects)
     n_subjects_series = pd.Series(n_subjects)
 
     n_subjects_series.hist(bins=range(100), ax=ax, color='r')

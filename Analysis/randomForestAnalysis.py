@@ -52,7 +52,7 @@ selected_features = [#'available',
 # add weighted_hourly_response column
 if 'weighted_hourly_response' in selected_features:
     weight = 10.0
-    tutor_df = load_pickle('Data/tutorDataFrame.pickle')
+    tutor_df = load_pickle('Data/tutorDataFrame.pickle').transpose()
     tutor_df = processTools.add_weighted_hourly_response(
         tutor_df, weight)
     whr = tutor_df.weighted_hourly_response[df.tutor_id]

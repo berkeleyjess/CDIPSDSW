@@ -66,10 +66,11 @@ def add_weighted_hourly_response(tutor_df, weight=1.0):
         
     # weighted hourly response
     tutor_df['weighted_hourly_response'] = \
-        (pd.Series(len(tutor_df)*[weight*total_hourly_response]) + \
+        (pd.Series(len(tutor_df)*[weight*total_hourly_response],
+                   index=tutor_df.index) + \
             tutor_df['hourly_response_n_clicked'].apply(
                 lambda x: np.array(x))) / \
-        (pd.Series(len(tutor_df)*[weight]) + \
+        (pd.Series(len(tutor_df)*[weight], index=tutor_df.index) + \
             tutor_df['hourly_n_pings'])
         
     return tutor_df

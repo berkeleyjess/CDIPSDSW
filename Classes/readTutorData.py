@@ -83,7 +83,7 @@ for tid in series_dicts.keys():
     df_dict[tid] = s
 
 # Make final dataframe
-tutor_df = pd.DataFrame(df_dict)
+tutor_df = pd.DataFrame(df_dict).transpose()
 
 print "Saving tutor dataframe..."
 with open(r"Data/tutorDataFrame.pickle", "wb") as output_file:

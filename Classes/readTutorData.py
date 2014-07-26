@@ -13,8 +13,16 @@ import pandas as pd
 import numpy as np
 import cPickle
 from pytz import timezone
+import sys
+sys.path.append('./Analysis')
+from processTools import add_weighted_hourly_response
 
-def readTutorData(pings_df):
+def readTutorData(pings_df, weight=10.0):
+    """
+    The weight option is for the weighted_hourly_response
+    column - see add_weighted_hourly_response in
+    processTools.py.
+    """
 
     total_pings = len(pings_df['tutor_id'])
 
@@ -83,6 +91,10 @@ def readTutorData(pings_df):
     # Make final dataframe
     tutor_df = pd.DataFrame(df_dict)
 
+    # Add a 'weighted_hourly_response' column
+    tutor_df = add_weighted_hourly_response(tutor_df, 
+                                            weight=weight)
+    
     return tutor_df
 
 if __name__ == '__main__':

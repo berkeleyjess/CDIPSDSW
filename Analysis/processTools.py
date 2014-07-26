@@ -37,7 +37,7 @@ def add_ping_availability_int(ping_df):
                               ping_df.available_now.astype(int)
     return ping_df
 
-def add_weighted_hourly_response(tutor_df, weight=1.0):
+def add_weighted_hourly_response(tutor_df, weight=10.0):
     """
     Add a column to the tutor DataFrame that combines the
     hourly response for each individual tutor with the 
@@ -51,6 +51,8 @@ def add_weighted_hourly_response(tutor_df, weight=1.0):
       approximately equal to the hourly response for that
       individual tutor.
     """
+    tutor_df = tutor_df.transpose()
+    
     # total pings per local hour for each tutor
     tutor_df['hourly_n_pings'] = \
         tutor_df['hourly_response_n_clicked'].apply(
@@ -73,5 +75,5 @@ def add_weighted_hourly_response(tutor_df, weight=1.0):
         (pd.Series(len(tutor_df)*[weight], index=tutor_df.index) + \
             tutor_df['hourly_n_pings'])
         
-    return tutor_df
+    return tutor_df.transpose()
     

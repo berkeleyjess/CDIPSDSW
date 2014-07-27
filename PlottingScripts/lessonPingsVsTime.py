@@ -24,6 +24,7 @@ def plot(ping_data):
     lesson_start = lesson_pings.time_sent_success.iloc[0]
     t_sent = lesson_pings.time_sent_success - lesson_start
     t_clicked = lesson_pings.time_clicked - lesson_start
+    t_clicked_min = (t_clicked.min().values / np.timedelta64(1, 's'))[0]
     dt_clicked = lesson_pings.time_clicked - lesson_pings.time_sent_success
 
     # create time grid
@@ -46,6 +47,8 @@ def plot(ping_data):
     ax.plot(t, nc_pings, 'k-', label='all pings')
     ax.plot(t, nc_pings_clicked, 'r-', label='clicked')
     ax.plot(t, nc_pings_clicked_lt30sec, 'b-', label='clicked < 30 sec')
+    ax.plot((t_clicked_min, t_clicked_min), (0, 1.2*nc_pings[-1]), 
+        'r:', label='first click')
     
     ax.set_xlim(0, total_sec)
     ax.set_ylim(0, 1.2*nc_pings[-1])

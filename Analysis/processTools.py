@@ -77,3 +77,18 @@ def add_weighted_hourly_response(tutor_df, weight=10.0):
         
     return tutor_df.transpose()
     
+def add_ping_hourly_response(ping_df, tutor_df):
+    """
+    Given a ping DataFrame and tutor DataFrame, add hourly_response
+    and weighted_hourly_response columns to the ping data that 
+    take a single value from the corresponding length-24 arrays
+    in the tutor data, selected based on the local time at which
+    the ping was sent.
+    """
+    for label in ['hourly_response', 'weighted_hourly_response']:
+        hr = tutor_df.ix[label][ping_df.tutor_id]
+        ping_df[label] = pd.Series(np.choose(
+            np.floor(ping_df.time_sent_success_local).astype(int).values,
+            np.transpose(np.array(list(hr.values)))),
+            index=ping_df.index)
+    return ping_df

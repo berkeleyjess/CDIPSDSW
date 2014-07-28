@@ -3,10 +3,18 @@ Ping timeline for a single lesson ID. Plot the cumulative number
 of pings sent (all pings, pings that got a response, and pings
 with a response within 30 seconds) vs. time in seconds.
 
-By default, one lesson ID is plotted at random.
-N > 1 random lessons can be displayed using the command line
-arguments 'random N' with makePlot.py, e.g.
-    python makePlot.py lessonPingsVsTime.py random 4
+By default, one lesson ID is plotted at random. Specific and/or 
+multiple lesson IDs can be selected with the following options:
+
+- N > 1 random lessons can be displayed using the command line
+  arguments 'random N' with makePlot.py, e.g.
+      python makePlot.py lessonPingsVsTime.py random 4
+
+- Lessons with specific IDs can be plotted using 'id ID1 ID2 ...', e.g.
+      python makePlot.py lessonPingsVsTime.py id 134153 89699
+      
+- Lessons can also be selected by their indices (starting from 0), e.g.
+      python makePlot.py lessonPingsVsTime.py index 0 1 2
 """
 
 import numpy as np
@@ -30,6 +38,10 @@ def plot(ping_data, args=None):
                 for i in range(int(args[1])):
                     lesson_index = np.random.randint(0, len(all_lessons))
                     lessons.append(all_lessons[lesson_index])
+            elif args[0] == 'id':
+                lessons = [int(a) for a in args[1:]]
+            elif args[0] == 'index':
+                lessons = [all_lessons[int(a)] for a in args[1:]]
             else:
                 print 'Option "' + args[0] + '" is unknown. ',
                 print 'Using default (one random lesson ID).'

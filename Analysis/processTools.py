@@ -65,6 +65,8 @@ def add_weighted_hourly_response(tutor_df, weight=10.0):
         tutor_df['hourly_response_n_clicked'].apply(
             lambda x: np.array(x)).sum() / \
         tutor_df['hourly_n_pings'].sum().astype(float)
+    tutor_df['total_hourly_response'] = pd.Series(
+        len(tutor_df)*[total_hourly_response])
         
     # weighted hourly response
     tutor_df['weighted_hourly_response'] = \
@@ -84,6 +86,10 @@ def add_ping_hourly_response(ping_df, tutor_df):
     take a single value from the corresponding length-24 arrays
     in the tutor data, selected based on the local time at which
     the ping was sent.
+
+    For tutors in the ping DataFrame not found in the tutor DataFrame,
+    the hourly_response is set to -1 and the weighted_hourly_response
+    is set to the average (from total_hourly_response).
     """
     for label in ['hourly_response', 'weighted_hourly_response']:
         hr = tutor_df.ix[label][ping_df.tutor_id]

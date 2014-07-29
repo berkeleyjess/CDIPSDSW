@@ -8,7 +8,7 @@
 #  the actual result, and the predicted result for the three cross-validation runs (0,1,2)
 #
 #  The .txt file contains the number of estimators, features used, and feature importance,
-#  precision, and recall for each of the three runs. 
+#  precision, and recall for each of the three runs.
 
 
 import sys
@@ -52,7 +52,7 @@ selected_features = [#'available',
                      #'hourly_response_n_not_clicked',
                      #'n_clicks_under_30_pct',
                      #'n_clicks_pct',
-                     'success']    
+                     'success']
 
 # add weighted_hourly_response column
 if 'weighted_hourly_response' in selected_features:
@@ -65,7 +65,7 @@ if 'weighted_hourly_response' in selected_features:
         np.floor(df.time_sent_success_local).astype(int).values,
         np.transpose(np.array(list(whr.values)))),
         index=df.index)
-    
+
 #rf_data is the data that will go into Random Forest
 rf_data=df[selected_features]
 
@@ -77,10 +77,10 @@ rf_data=drop_nan_row(rf_data)
 nest=9
 cl_settings = {'n_estimators': nest}
 classifier = ensemble.RandomForestClassifier(**cl_settings)
-    
+
 # number of k-folds for cross-validation
 n_cv = 3
-     
+
 # select features from the data
 # define the true answers for the training set
 labels = rf_data['success'].values
@@ -89,7 +89,7 @@ labels = rf_data['success'].values
 rf_data.drop(['success'],axis=1,inplace=True)
 features = rf_data.values
 print '\nfeatures:', selected_features
-    
+
 # set up cross-validation
 kfold = cross_validation.StratifiedKFold(labels,n_folds=n_cv)
 # find minimum test length
@@ -112,7 +112,7 @@ tfid.write('Random Forests, n_estimators = ' + str(nest) + '\n')
 for item in selected_features:
 	tfid.write(item + '\t')
 
-outdf=pd.DataFrame()	
+outdf=pd.DataFrame()
 # fit the classifier and compute metrics on the test sample
 for i, (train, test) in enumerate(kfold):
 	print('\nk-fold {0:d}:'.format(i+1))
@@ -142,20 +142,6 @@ for i, (train, test) in enumerate(kfold):
 	outdf[h4]=predic_prob[:,0]
 	outdf[h5]=predic_prob[:,1]
 	#=pd.DataFrame({h1:test,h2:labels[test],h3:prediction})
-	
+
 outdf.to_csv(csvfilename,index=False)
 tfid.close()
-
-
-		
-		
-	
-		
-	
-	
-=======
-
->>>>>>> 2c21a13c92c4120a13b0902f0627efe34e97b660
-
-
-

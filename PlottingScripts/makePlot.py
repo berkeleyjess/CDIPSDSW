@@ -53,6 +53,8 @@ import defaultSettings
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='name of plotting script')
 parser.add_argument('-s', '--save_file', help='name of output file')
+parser.add_argument('plot_args', nargs=argparse.REMAINDER, 
+    help='extra arguments specific to the plotting script')
 args = parser.parse_args()
 # strip .py extension from script file if it's there
 if args.file.endswith('.py'):
@@ -76,7 +78,10 @@ for d in plot_module.required_data:
 
 # import the plotting script and run its plot function
 print 'Plotting...'
-fig = plot_module.plot(*data)
+if args.plot_args:
+    fig = plot_module.plot(*data, args=args.plot_args);
+else:
+    fig = plot_module.plot(*data)
 plt.tight_layout()
 
 if args.save_file:

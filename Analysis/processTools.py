@@ -37,7 +37,7 @@ def add_ping_availability_int(ping_df):
                               ping_df.available_now.astype(int)
     return ping_df
 
-def add_weighted_hourly_response(tutor_df, weight=1.0):
+def add_weighted_hourly_response(tutor_df, weight=10.0):
     """
     Add a column to the tutor DataFrame that combines the
     hourly response for each individual tutor with the 
@@ -51,6 +51,8 @@ def add_weighted_hourly_response(tutor_df, weight=1.0):
       approximately equal to the hourly response for that
       individual tutor.
     """
+    tutor_df = tutor_df.transpose()
+    
     # total pings per local hour for each tutor
     tutor_df['hourly_n_pings'] = \
         tutor_df['hourly_response_n_clicked'].apply(
@@ -63,6 +65,8 @@ def add_weighted_hourly_response(tutor_df, weight=1.0):
         tutor_df['hourly_response_n_clicked'].apply(
             lambda x: np.array(x)).sum() / \
         tutor_df['hourly_n_pings'].sum().astype(float)
+    tutor_df['total_hourly_response'] = pd.Series(
+        len(tutor_df)*[total_hourly_response])
         
     # weighted hourly response
     tutor_df['weighted_hourly_response'] = \
@@ -73,5 +77,50 @@ def add_weighted_hourly_response(tutor_df, weight=1.0):
         (pd.Series(len(tutor_df)*[weight], index=tutor_df.index) + \
             tutor_df['hourly_n_pings'])
         
-    return tutor_df
+    return tutor_df.transpose()
     
+def add_ping_hourly_response(ping_df, tutor_df):
+    """
+    Given a ping DataFrame and tutor DataFrame, add hourly_response
+    and weighted_hourly_response columns to the ping data that 
+    take a single value from the corresponding length-24 arrays
+    in the tutor data, selected based on the local time at which
+    the ping was sent.
+
+    For tutors in the ping DataFrame not found in the tutor DataFrame,
+    the hourly_response is set to -1 and the weighted_hourly_response
+    is set to the average (from total_hourly_response).
+    """
+    tutor_ids = ping_df.tutor_id
+    # change tutor IDs not found in the tutor DataFrame to 0
+    tutor_ids = np.where(np.in1d(tutor_ids, tutor_df.columns), 
+                         tutor_ids, 0)
+
+    # add a column to the tutor DataFrame with tutor_id = 0
+    #  where hourly_response is an array with all values -1
+    #  and weighted_hourly_response is total_hourly_response
+    tutor_df[0] = pd.Series(index=tutor_df.index)
+    # placeholder values to be replaced using fill_hr_cols
+    tutor_df[0].ix['hourly_response'] = 0
+    tutor_df[0].ix['weighted_hourly_response'] = 1
+    # total_hourly_response is the same for all columns,
+    #  so just take it from the first column
+    thr = tutor_df[tutor_df.columns[0]].ix['total_hourly_response']
+
+    def fill_hr_cols(x, thr):
+        if x == 0:
+            return np.zeros(24) - 1
+        elif x == 1:
+            return thr
+        else:
+            return np.nan
+
+    tutor_df[0] = tutor_df[0].apply(lambda x: fill_hr_cols(x, thr))
+
+    for label in ['hourly_response', 'weighted_hourly_response']:
+        hr = tutor_df.ix[label][tutor_ids]
+        ping_df[label] = pd.Series(np.choose(
+            np.floor(ping_df.time_sent_success_local).astype(int).values,
+            np.transpose(np.array(list(hr.values)))),
+            index=ping_df.index)
+    return ping_df

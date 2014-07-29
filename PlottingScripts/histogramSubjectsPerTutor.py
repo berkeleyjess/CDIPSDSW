@@ -12,7 +12,11 @@ def plot(tutor_data):
     ax = fig.add_subplot(111)
 
     n_subjects = {}
+<<<<<<< HEAD
     for tid in tutor_data.transpose():
+=======
+    for tid in tutor_data:
+>>>>>>> e999d128e4141cded07ee79f9a42f5b819d27b69
         n_subjects[tid] = len(tutor_data[tid].subjects)
     n_subjects_series = pd.Series(n_subjects)
 

@@ -18,6 +18,11 @@ import processTools
 import numpy as np
 from sklearn import cross_validation, metrics, ensemble
 import pandas as pd
+import matplotlib.pyplot as plt
+
+
+#User Defined Output File, Change before running file
+outfname = 'run10'
 
 #Load the Ping and Tutor Data Frame
 print 'Loading ping/tutor DataFrame...'
@@ -52,7 +57,7 @@ selected_features = [#'available',
 # add weighted_hourly_response column
 if 'weighted_hourly_response' in selected_features:
     weight = 10.0
-    tutor_df = load_pickle('Data/tutorDataFrame.pickle')
+    tutor_df = load_pickle('Data/tutorDataFrame.pickle').transpose()
     tutor_df = processTools.add_weighted_hourly_response(
         tutor_df, weight)
     whr = tutor_df.weighted_hourly_response[df.tutor_id]
@@ -105,40 +110,52 @@ txtfilename=output_filestr + '.txt'
 tfid=open(txtfilename,'wb')
 tfid.write('Random Forests, n_estimators = ' + str(nest) + '\n')
 for item in selected_features:
-    tfid.write(item + '\t')
+	tfid.write(item + '\t')
 
-outdf=pd.DataFrame()    
+outdf=pd.DataFrame()	
 # fit the classifier and compute metrics on the test sample
 for i, (train, test) in enumerate(kfold):
-    print('\nk-fold {0:d}:'.format(i+1))
-    output=classifier.fit(features[train], labels[train])
-    print ('feature importances:', \
-    classifier.feature_importances_)
-    #Write Variables to Text File
-    tfid.write('\n')
-    for item in classifier.feature_importances_:
-        tfid.write(str(round(item,4)) + '\t')
-    prediction = classifier.predict(features[test])
-    print 'precision:', \
-    metrics.precision_score(labels[test], prediction)
-    tfid.write('\n' + 'Precision = ' + str(round(metrics.precision_score(labels[test], prediction),4)))
-    print 'recall:', \
-    metrics.recall_score(labels[test], prediction)
-    tfid.write('\n' + 'Recall = ' + str(round(metrics.recall_score(labels[test], prediction),4)) + '\n')
-    h1='test' + str(i)
-    h2='actual' + str(i)
-    h3='prediction' + str(i)
-    # only output up to the minimum test length
-    outdf[h1]=test[:min_len_test]
-    outdf[h2]=labels[test[:min_len_test]]
-    outdf[h3]=prediction[:min_len_test]
-    #=pd.DataFrame({h1:test,h2:labels[test],h3:prediction})
-    
+	print('\nk-fold {0:d}:'.format(i+1))
+	output=classifier.fit(features[train], labels[train])
+	print ('feature importances:', \
+	classifier.feature_importances_)
+	#Write Variables to Text File
+	tfid.write('\n')
+	for item in classifier.feature_importances_:
+		tfid.write(str(round(item,4)) + '\t')
+	prediction = classifier.predict(features[test])
+	predic_prob= classifier.predict_proba(features[test])
+	print 'precision:', \
+	metrics.precision_score(labels[test], prediction)
+	tfid.write('\n' + 'Precision = ' + str(round(metrics.precision_score(labels[test], prediction),4)))
+	print 'recall:', \
+	metrics.recall_score(labels[test], prediction)
+	tfid.write('\n' + 'Recall = ' + str(round(metrics.recall_score(labels[test], prediction),4)) + '\n')
+	h1='test' + str(i)
+	h2='actual' + str(i)
+	h3='prediction' + str(i)
+	h4='predic_prob1' + str(i)
+	h5='predic_prob2' + str(i)
+	outdf[h1]=test
+	outdf[h2]=labels[test]
+	outdf[h3]=prediction
+	outdf[h4]=predic_prob[:,0]
+	outdf[h5]=predic_prob[:,1]
+	#=pd.DataFrame({h1:test,h2:labels[test],h3:prediction})
+	
 outdf.to_csv(csvfilename,index=False)
 tfid.close()
 
 
+		
+		
+	
+		
+	
+	
+=======
 
+>>>>>>> 2c21a13c92c4120a13b0902f0627efe34e97b660
 
 
 

@@ -10,7 +10,7 @@ execfile(read_in_file)
 # Divide pings into train and test
 length = len(pings)
 train_set = pings[0:length/2]
-test_set = pings[length/2+1:length]
+test_set = pings[length/2:length]
 
 # Get list of Ping attributes
 bad_attributes = dir(Ping)

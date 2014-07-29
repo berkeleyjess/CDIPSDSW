@@ -13,8 +13,16 @@ import pandas as pd
 import numpy as np
 import cPickle
 from pytz import timezone
+import sys
+sys.path.append('./Analysis')
+from processTools import add_weighted_hourly_response
 
-def readTutorData(pings_df):
+def readTutorData(pings_df, weight=10.0):
+    """
+    The weight option is for the weighted_hourly_response
+    column - see add_weighted_hourly_response in
+    processTools.py.
+    """
 
     total_pings = len(pings_df['tutor_id'])
 
@@ -28,41 +36,44 @@ def readTutorData(pings_df):
     for tid in tutor_ids:
         series_dicts[tid] = {}
 
-    for x in xrange(total_pings):
-        if x%10000==0: print "Pings evaluated:", x, "/", total_pings
+    from time import time
+    t0 = time()
 
-        entry = pings_df.iloc[x, :]
-        tid = entry['tutor_id']
+    # Loop over pings grouped by tutor_id
+    for i, (tid, tutor_pings) in enumerate(pings_df.groupby(
+            'tutor_id', sort=False)):
+        if i%1000 == 0:
+            print '    Tutors evaluated:', i, '/', len(tutor_ids)
 
-        # Add number of pings variable, and if first instance, initialize all other variables
-        if 'n_pings' in series_dicts[tid]: series_dicts[tid]['n_pings']+=1
-        else:
-            series_dicts[tid]['n_pings']=1
-            series_dicts[tid]['n_clicks']=0
-            series_dicts[tid]['n_clicks_under_30']=0
-            series_dicts[tid]['hourly_response_n_clicked']=[0]*24
-            series_dicts[tid]['hourly_response_n_not_clicked']=[0]*24
-            series_dicts[tid]['hourly_average_sec_response']=[0]*24
-            series_dicts[tid]['subjects']=[]
+        series_dicts[tid]['n_pings'] = len(tutor_pings)
+        series_dicts[tid]['n_clicks'] = len(
+            tutor_pings[~pd.isnull(tutor_pings.time_clicked)])
+        series_dicts[tid]['n_clicks_under_30'] = len(
+            tutor_pings[tutor_pings.sec_response < 30.])
+        series_dicts[tid]['subjects'] = list(set(
+            tutor_pings.lesson_subject))
 
-        # Add number of clicks variables
-        if entry['time_clicked'] != None:
-            series_dicts[tid]['n_clicks']+=1
-            series_dicts[tid]['hourly_average_sec_response'][int(entry['time_sent_success_local'])]+=entry['sec_response']
-        if entry['time_clicked'] != None and entry['sec_response']<30:
-            series_dicts[tid]['n_clicks_under_30']+=1
-            series_dicts[tid]['hourly_response_n_clicked'][int(entry['time_sent_success_local'])]+=1
-        else: series_dicts[tid]['hourly_response_n_not_clicked'][int(entry['time_sent_success_local'])]+=1
-
-        # Add list of subjects taught
-        series_dicts[tid]['subjects'].append(entry['lesson_subject'])
-
+        # Loop over pings grouped by tutor's local hour
+        series_dicts[tid]['hourly_response_n_clicked'] = np.zeros(24)
+        series_dicts[tid]['hourly_response_n_not_clicked'] = np.zeros(24)
+        series_dicts[tid]['hourly_average_sec_response'] = np.zeros(24)
+        for h, g in tutor_pings.groupby(
+                tutor_pings.time_sent_success_local.apply(
+                lambda x: int(x))):
+            series_dicts[tid]['hourly_response_n_not_clicked'][h] = \
+                len(g.sec_response[~(g.sec_response < 30.)])
+            series_dicts[tid]['hourly_response_n_clicked'][h] = \
+                len(g.sec_response) - \
+                series_dicts[tid]['hourly_response_n_not_clicked'][h]
+            total_sec_response = g.sec_response.sum()
+            series_dicts[tid]['hourly_average_sec_response'][h] = \
+                0 if pd.isnull(total_sec_response) else total_sec_response
 
     print "Building tutor dataframe..."
 
     for tid in series_dicts.keys():
         # Keep only unique subjects
-        series_dicts[tid]['subjects'] = list(set(series_dicts[tid]['subjects']))
+        #series_dicts[tid]['subjects'] = list(set(series_dicts[tid]['subjects']))
 
         # Compute hourly response
         series_dicts[tid]['hourly_response'] = []
@@ -83,6 +94,10 @@ def readTutorData(pings_df):
     # Make final dataframe
     tutor_df = pd.DataFrame(df_dict)
 
+    # Add a 'weighted_hourly_response' column
+    tutor_df = add_weighted_hourly_response(tutor_df,
+                                            weight=weight)
+
     return tutor_df
 
 if __name__ == '__main__':
@@ -96,4 +111,3 @@ if __name__ == '__main__':
     print "Saving tutor dataframe..."
     with open(r"Data/tutorDataFrame.pickle", "wb") as output_file:
         cPickle.dump(tutor_df, output_file)
-

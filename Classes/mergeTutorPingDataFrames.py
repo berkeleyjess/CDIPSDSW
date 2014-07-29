@@ -19,7 +19,7 @@ import cPickle
 
 #Load the Tutor and Ping Data
 tutor_fname='Data/tutorDataFrame.pickle'
-tdata=load_pickle(tutor_fname).transpose()
+tdata=load_pickle(tutor_fname)
 ping_fname='Data/cleanPingDataFrame.pickle'
 pdata=load_pickle(ping_fname)
 

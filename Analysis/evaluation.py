@@ -15,6 +15,7 @@ and a model fit to training data:
 import numpy as np
 import pandas as pd
 import datetime
+import cPickle
 
 # load ping data
 print 'Loading ping data...'
@@ -110,7 +111,7 @@ for i_test, (ping_id, actual, prob) in enumerate(zip(
 
 # write results to csv file
 output_df = pd.DataFrame()
-output_csv_filename = pred_csv.split('.')[0] + '_eval.csv'
+output_filename = pred_csv.split('.')[0] + '_eval.pickle'
 headers = ['n_for_fast_response_actual', 'n_for_fast_response_pred',
            'n_fast_in_first_5_actual', 'n_fast_in_first_5_pred',
            'wait_time_actual', 'wait_time_pred']
@@ -119,5 +120,6 @@ columns = [n_for_fast_response_actual, n_for_fast_response_pred,
            wait_time_actual, wait_time_pred]
 for h, col in zip(headers, columns):
     output_df[h] = pd.Series(col)
-output_df.to_csv(output_csv_filename, na_rep='None', index=False)
+with open(output_filename, 'wb') as output_file:
+    cPickle.dump(output_df, output_file)
 

@@ -75,8 +75,10 @@ labels = (df['sec_response'] < success_time).values
 
 ping_ids = df['id'].values
 
+print str(ping_ids[:10])
+
 # set up cross-validation
-kfold = cross_validation.StratifiedKFold(labels, n_folds=n_cv)
+kfold = cross_validation.KFold(labels, n_folds=n_cv)
 # find minimum test data length
 min_len_test = len(df)
 for (train, test) in kfold:
@@ -86,7 +88,7 @@ for (train, test) in kfold:
 #Old Location of Rescaling Methods
 #
 
-output_prefix = 'Analysis/Data/LR_auto_whr2'
+output_prefix = 'Analysis/Data/LR_auto'
 # csv file for index, actual result, and prediction for each CV iteration
 csv_filename = output_prefix + '.csv'
 # txt file for selected features and other relevant info
@@ -113,6 +115,7 @@ for i, (train, test) in enumerate(kfold):
     
     train_df = df.iloc[train]
     test_df = df.iloc[test]
+    print str(test_df['id'][:10])
     
     # add tutor hourly response data
     if 'hourly_response' in selected_features or \
@@ -179,7 +182,8 @@ for i, (train, test) in enumerate(kfold):
 						train_df[f] = train_df[f].apply(lambda x: (x - mean)/std)
 						mean, std = (test_df[f].mean(), test_df[f].std())
 						test_df[f] = test_df[f].apply(lambda x: (x - mean)/std)
-						
+
+					
 	rs_selected_features=selected_features.copy()
 	for f in new_features:
 		rs_selected_features[f] = {}

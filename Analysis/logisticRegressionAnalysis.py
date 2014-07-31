@@ -137,6 +137,7 @@ for i, (train, test) in enumerate(kfold):
 		# (also they don't really need to be rescaled)
 		if f not in ['hourly_response', 'weighted_hourly_response']:
 			feature_type = str(type(df[f].dropna()[0]))
+			#feature_type = str(type(df[f].dropna()[0]))
 			# map boolean values to -1/1
 			if 'bool' in feature_type:
 				train_df[f] = train_df[f].apply(lambda x: 1 if x else -1)
@@ -166,7 +167,7 @@ for i, (train, test) in enumerate(kfold):
 					if 'transform' in selected_features[f]:
 						train_df[f] = train_df[f].apply(selected_features[f]['transform'])
 						test_df[f] = test_df[f].apply(selected_features[f]['transform'])
-					# rescale to (-1, 1) using given range
+						#rescale to (-1, 1) using given range
 					if 'range' in selected_features[f]:
 						f_min = selected_features[f]['range'][0]
 						f_ext = selected_features[f]['range'][1] - f_min
@@ -179,13 +180,14 @@ for i, (train, test) in enumerate(kfold):
 						mean, std = (test_df[f].mean(), test_df[f].std())
 						test_df[f] = test_df[f].apply(lambda x: (x - mean)/std)
 						
+	rs_selected_features=selected_features.copy()
 	for f in new_features:
-		selected_features[f] = {}
+		rs_selected_features[f] = {}
 	#for f in dropped_features:
 	#	dropped = selected_features.pop(f)
         
-    train_features = train_df[selected_features.keys()].values
-    test_features = test_df[selected_features.keys()].values
+    train_features = train_df[rs_selected_features.keys()].values
+    test_features = test_df[rs_selected_features.keys()].values
     
     # fit model to training data and compute predictions for test data
     model = classifier.fit(train_features, labels[train])

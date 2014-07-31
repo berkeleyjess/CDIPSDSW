@@ -51,7 +51,7 @@ n_cv = 3
 hr_weight = 10.0
 
 # choose classifier and its settings
-cl_settings = {'n_estimators': 9}
+cl_settings = {'n_estimators': 20}
 classifier = ensemble.RandomForestClassifier(**cl_settings)
     
 
@@ -63,6 +63,8 @@ df = df.dropna(subset=['sec_since_online'])
 
 # compute labels for true classes (0/1 for slow/fast response)
 labels = (df['sec_response'] < success_time).values
+
+ping_ids = df['id'].values
 
 # set up cross-validation
 kfold = cross_validation.StratifiedKFold(labels, n_folds=n_cv)
@@ -131,9 +133,9 @@ for i, (train, test) in enumerate(kfold):
 
     # write results to csv file
     headers = [s + str(i) for s in \
-        ['test', 'actual', 'prediction', 'predicted_probability']]
+        ['ping_id', 'actual', 'prediction', 'predicted_probability']]
     for h, col in zip(headers,
-            [test, labels[test], prediction, pred_prob[:,1]]):
+            [ping_ids[test], labels[test], prediction, pred_prob[:,1]]):
         out_df[h] = col
     
 out_df.to_csv(csv_filename, index=False)

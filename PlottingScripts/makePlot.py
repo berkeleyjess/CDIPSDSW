@@ -51,8 +51,8 @@ import defaultSettings
 
 # parse command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('file', help='name of plotting script')
 parser.add_argument('-s', '--save_file', help='name of output file')
+parser.add_argument('file', help='name of plotting script')
 parser.add_argument('plot_args', nargs=argparse.REMAINDER, 
     help='extra arguments specific to the plotting script')
 args = parser.parse_args()

@@ -48,6 +48,14 @@ def change_facebook_client(ping_df, method='gtalk'):
     elif method == 'drop':
         # drop all rows with Facebook
         ping_df = ping_df[ping_df.client != 2]
+    return ping_df
+
+def drop_pings_before_available_now(ping_df):
+    """
+    Drop all pings before the first instance of available_now==True.
+    """
+    first_now = ping_df[ping_df.available_now].index[0]
+    return ping_df.ix[first_now:]
 
 def add_weighted_hourly_response(tutor_df, weight=10.0):
     """

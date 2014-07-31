@@ -30,9 +30,9 @@ import matplotlib.pyplot as plt
 
 
 # which columns to include as features
-selected_features = [#'available',
-                     #'available_now',
-                     #'client',
+selected_features = ['available',
+                     'available_now',
+                     'client',
                      'sec_since_online',
                      'sec_since_pageload',
                      'time_sent_success_local',
@@ -56,7 +56,13 @@ classifier = ensemble.RandomForestClassifier(**cl_settings)
     
 
 print 'Loading ping data...'
-df=load_pickle('Data/cleanPingDataFrame.pickle')
+df = load_pickle('Data/cleanPingDataFrame.pickle')
+
+# replace Facebook client with Gtalk
+df = processTools.change_facebook_client(df)
+
+# drop rows before available_now was first used
+df = processTools.drop_pings_before_available_now(df)
 
 # drop rows with NaN entries in sec_since_online
 df = df.dropna(subset=['sec_since_online'])
@@ -74,7 +80,7 @@ for (train, test) in kfold:
     if len(test) < min_len_test:
         min_len_test = len(test)
 
-output_prefix = 'Analysis/Data/RF'
+output_prefix = 'Analysis/Data/RF_all_features_w_10'
 # csv file for index, actual result, and prediction for each CV iteration
 csv_filename = output_prefix + '.csv'
 # txt file for selected features and other relevant info

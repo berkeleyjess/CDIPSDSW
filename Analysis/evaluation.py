@@ -40,7 +40,7 @@ print 'Simulating pings and computing statistics...'
 for i_test, (ping_id, actual, prob) in enumerate(zip(
         ping_id_headers, actual_headers, prob_headers)):
     
-    print '  Test subsample', i_test, '/', len(ping_id_headers)
+    print '  Test subsample', i_test+1, '/', len(ping_id_headers)
 
     # get useful columns from ping DataFrame
     test_ping_df = ping_df[ping_df.id.isin(pred_df[ping_id].values)]
@@ -54,7 +54,7 @@ for i_test, (ping_id, actual, prob) in enumerate(zip(
     grouped_lessons = pred_df.groupby('lesson_id', sort=False)
     for il, (lesson, lesson_df) in enumerate(grouped_lessons):
 
-        if (il+1) % 100 == 0:
+        if (il+1) % 1000 == 0:
             print '    ', il+1, '/', len(grouped_lessons), 'lessons'
 
         # only include lessons with a complete set of predictions and at least one fast response
@@ -81,9 +81,12 @@ for i_test, (ping_id, actual, prob) in enumerate(zip(
             # number of pings in first 5 with < 30 sec responses
             if len(lesson_df) >= 5:
                 n_fast_in_first_5_actual.append(
-                    float(len(np.where(fast_responses_actual < 5)[0])))
+                    len(np.where(fast_responses_actual < 5)[0]))
                 n_fast_in_first_5_pred.append(
-                    float(len(np.where(fast_responses_pred < 5)[0])))
+                    len(np.where(fast_responses_pred < 5)[0]))
+            else:
+                n_fast_in_first_5_actual.append(np.nan)
+                n_fast_in_first_5_pred.append(np.nan)
                 
             # wait time from first ping sent to first response
             def timedelta_with_nan(dt):
@@ -105,9 +108,16 @@ for i_test, (ping_id, actual, prob) in enumerate(zip(
                  lesson_df.time_sent_success.min()).seconds)
             
 
-for x in [n_for_fast_response_actual, n_for_fast_response_pred, 
-          n_fast_in_first_5_actual, n_fast_in_first_5_pred,
-          wait_time_actual, wait_time_pred]:
-    print np.mean(x)
-
+# write results to csv file
+output_df = pd.DataFrame()
+output_csv_filename = pred_csv.split('.')[0] + '_eval.csv'
+headers = ['n_for_fast_response_actual', 'n_for_fast_response_pred',
+           'n_fast_in_first_5_actual', 'n_fast_in_first_5_pred',
+           'wait_time_actual', 'wait_time_pred']
+columns = [n_for_fast_response_actual, n_for_fast_response_pred, 
+           n_fast_in_first_5_actual, n_fast_in_first_5_pred,
+           wait_time_actual, wait_time_pred]
+for h, col in zip(headers, columns):
+    output_df[h] = pd.Series(col)
+output_df.to_csv(output_csv_filename, na_rep='None', index=False)
 

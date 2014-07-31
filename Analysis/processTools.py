@@ -37,6 +37,18 @@ def add_ping_availability_int(ping_df):
                               ping_df.available_now.astype(int)
     return ping_df
 
+def change_facebook_client(ping_df, method='gtalk'):
+    """
+    Change or drop pings with client==2 (Facebook).
+    """
+    if method == 'gtalk':
+        # replace all Facebook entries with Gtalk
+        ping_df['client'] = ping_df.client.apply(
+            lambda x: 1 if x == 2 else x)
+    elif method == 'drop':
+        # drop all rows with Facebook
+        ping_df = ping_df[ping_df.client != 2]
+
 def add_weighted_hourly_response(tutor_df, weight=10.0):
     """
     Add a column to the tutor DataFrame that combines the

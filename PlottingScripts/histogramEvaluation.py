@@ -5,7 +5,7 @@ with median response times in bins.
 
 import numpy as np
 
-required_data = ['Analysis/Data/RF_eval.pickle']
+required_data = ['Analysis/Data/RF_all_features_w_10_eval.pickle']
 
 def plot(eval_df):
     import matplotlib.pyplot as plt
@@ -51,10 +51,10 @@ def plot(eval_df):
     bins_r = bins_l + bar_width - 0.002
     mean_actual = int(np.round(eval_df.wait_time_actual.mean()))
     mean_pred = int(np.round(eval_df.wait_time_pred.mean()))
-    (eval_df.wait_time_actual/bin_width).astype(int).hist(
+    (eval_df.wait_time_actual.dropna()/bin_width).astype(int).hist(
         bins=bins_l, ax=ax, color=(0,.3,.9), grid=False, 
         label='Actual rankings (avg.=' + str(mean_actual) + ' sec.)')
-    (eval_df.wait_time_pred/bin_width).astype(int).hist(
+    (eval_df.wait_time_pred.dropna()/bin_width).astype(int).hist(
         bins=bins_r, ax=ax, color=(.9,.8,.2), grid=False, 
         label='Model rankings (avg.=' + str(mean_pred) + ' sec.)')
     ax.set_xlabel('Total time until first response (seconds)')

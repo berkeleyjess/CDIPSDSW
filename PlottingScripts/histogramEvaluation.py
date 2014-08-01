@@ -5,14 +5,56 @@ with median response times in bins.
 
 import numpy as np
 
-required_data = ['Analysis/Data/RF_all_features_w_10_eval.pickle']
+required_data = ['Analysis/Data/LR_with_tutor_eval.pickle',
+                 'Analysis/Data/RF_with_tutor_eval.pickle']
 
-def plot(eval_df):
+def plot(*dfs):
     import matplotlib.pyplot as plt
-    
-    plt.rcParams.update({'figure.figsize': (8.0, 10.0)})
+
+    # plot settings for actual results
+    color_act = (0,0,0)
+    linestyle_act = '-'
+    label_act = 'Actual ping order'
+
+    # plot settings for model results
+    colors = [(0,.3,.9), (.9,.2,.5)]
+    linestyles = ['-', '-']
+    labels = ['LR w/tutor data', 'RF w/tutor data']
+
+    plt.rcParams.update({'figure.figsize': (8.0, 5.0)})
+    #plt.rcParams.update({'figure.figsize': (8.0, 10.0)})
     fig = plt.figure()
+
+    def p_lt_t(series, bins):
+        n, b = np.histogram(series.dropna(), bins)
+        return np.cumsum(n)/float(len(series))
+
+    ax = fig.add_subplot(111)
+    bins = np.array(np.arange(-0.5, 31.5))
+    bin_centers = 0.5*(bins[:-1] + bins[1:])
+
+    for i, (eval_df, c, ls, lb) in enumerate(zip(
+            dfs, colors, linestyles, labels)):
+        mean_actual = int(np.round(eval_df.wait_time_actual.mean()))
+        mean_pred = int(np.round(eval_df.wait_time_pred.mean()))
+        if i == 0:
+            ax.plot(bin_centers, p_lt_t(eval_df.wait_time_actual, bins), 
+                color=color_act, linestyle=linestyle_act, 
+                label=label_act + \
+                ' (avg.=' + str(mean_actual) + ' sec.)')
+        ax.plot(bin_centers, p_lt_t(eval_df.wait_time_pred, bins), 
+            color=c, linestyle=ls, label=lb + \
+            ' (avg.=' + str(mean_pred) + ' sec.)')
+
+    ax.set_ylabel('P(total time until first response < t)')
+    ax.set_xlabel('t (seconds)')
+    ax.set_xlim(0, 30)
+    ax.set_ylim(0, 0.9)
+    ax.set_yticks(np.arange(0, 1., 0.1))
+    plt.legend(loc='lower right', frameon=False)
+    plt.draw()
     
+    """
     ax = fig.add_subplot(311)
     bins_l = np.array(np.arange(0.001, 20.001, 0.5))
     bins_r = bins_l + 0.498
@@ -63,6 +105,7 @@ def plot(eval_df):
     plt.draw()
     xticklabels = ax.get_xticklabels()
     ax.set_xticklabels([(lambda s: str(int(bin_width*int(s.get_text()))) if len(s.get_text())>0 else '')(t) for t in xticklabels])
+    """
 
     return fig
     

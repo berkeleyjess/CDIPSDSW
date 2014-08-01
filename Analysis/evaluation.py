@@ -12,6 +12,8 @@ and a model fit to training data:
   both the model-based rankings and the actual outcomes.
 """
 
+pred_csv = 'Analysis/Data/RF_with_tutor.csv'
+
 import numpy as np
 import pandas as pd
 import datetime
@@ -24,7 +26,6 @@ ping_df = load_pickle('Data/cleanPingDataFrame.pickle')
 
 # load model results
 print 'Loading model results...'
-pred_csv = 'Analysis/Data/RF_all_features_w_10.csv'
 ping_id_headers = ['ping_id' + str(i) for i in range(3)]
 actual_headers = ['actual' + str(i) for i in range(3)]
 prob_headers = ['predicted_probability' + str(i) for i in range(3)]

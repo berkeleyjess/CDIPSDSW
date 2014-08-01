@@ -16,6 +16,8 @@ Outputs:
   precision, and recall for each of the three runs. 
 """
 
+output_prefix = 'Analysis/Data/RF_with_tutor'
+
 import sys
 sys.path.append('./Classes')
 from readTutorData import readTutorData
@@ -80,7 +82,6 @@ for (train, test) in kfold:
     if len(test) < min_len_test:
         min_len_test = len(test)
 
-output_prefix = 'Analysis/Data/RF_all_features_w_10'
 # csv file for index, actual result, and prediction for each CV iteration
 csv_filename = output_prefix + '.csv'
 # txt file for selected features and other relevant info
@@ -106,8 +107,8 @@ for i, (train, test) in enumerate(kfold):
     # standardize test data lengths
     test = test[:min_len_test]
     
-    train_df = df.iloc[train]
-    test_df = df.iloc[test]
+    train_df = df.loc[df.index[train], :]
+    test_df = df.loc[df.index[test], :]
     
     # add tutor hourly response data
     if 'hourly_response' in selected_features or \

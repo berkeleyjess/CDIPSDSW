@@ -144,3 +144,59 @@ def add_ping_hourly_response(ping_df, tutor_df):
             np.transpose(np.array(list(hr.values)))),
             index=ping_df.index)
     return ping_df
+
+def rescale_features(ping_df, features, max_classes=10):
+    """
+    Rescale features to (-1, 1) ranges.
+    """
+    new_features = []
+    dropped_features = []
+    for f in features:
+        if f in ping_df.columns:
+            feature_type = str(type(ping_df[f].dropna().iloc[0]))
+            # map boolean values to -1/1
+            if 'bool' in feature_type:
+                ping_df[f] = ping_df[f].apply(lambda x: 1 if x else -1)
+            else:
+                # map classes to multiple binary features
+                classes = list(set(ping_df[f].dropna()))
+                if len(classes) < max_classes:
+                    if len(classes) <= 2:
+                        ping_df[f] = ping_df[f].apply(
+                            lambda x: 1 if x == classes[0] else -1)
+                    else:
+                        for c in classes:
+                            s = pd.Series(np.where(
+                                ping_df[f] == c, 1, -1), 
+                                index=ping_df.index)
+                            ping_df[f + str(c)] = s
+                            new_features.append(f + str(c))
+                            ping_df.drop(f, axis=1)
+                            dropped_features.append(f)
+                else:
+                    # transform variables
+                    if 'transform' in features[f]:
+                        ping_df[f] = ping_df[f].apply(
+                            features[f]['transform'])
+                    #rescale to (-1, 1) using given range
+                    if 'range' in features[f]:
+                        f_min = features[f]['range'][0]
+                        f_ext = features[f]['range'][1] - f_min
+                        ping_df[f] = ping_df[f].apply(
+                            lambda x: 2.*(x-f_min)/f_ext - 1.)
+                    # if range not given, scale to mean=0, var.=1
+                    else:
+                        mean, std = (ping_df[f].mean(), ping_df[f].std())
+                        ping_df[f] = ping_df[f].apply(
+                            lambda x: (x - mean)/std)
+
+        else:
+            print 'Column ' + str(f) + ' not found in DataFrame.'
+
+
+    for f in new_features:
+        features[f] = {}
+    for f in dropped_features:
+        dropped = features.pop(f)
+
+    return (ping_df, features)

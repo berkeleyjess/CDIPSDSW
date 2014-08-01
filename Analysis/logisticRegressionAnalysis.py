@@ -29,9 +29,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# number of feature classes below which to split into binary features
-max_classes = 10
-
 # time threshold for successful response (in seconds)                     
 success_time = 30.
 
@@ -67,6 +64,12 @@ classifier = linear_model.LogisticRegression(penalty='l1',dual=False,class_weigh
 print 'Loading ping data...'
 df=load_pickle('Data/cleanPingDataFrame.pickle')
 
+# replace Facebook client with Gtalk
+df = processTools.change_facebook_client(df)
+
+# drop rows before available_now was first used
+df = processTools.drop_pings_before_available_now(df)
+
 # drop rows with NaN entries in sec_since_online
 df = df.dropna(subset=['sec_since_online'])
 
@@ -75,10 +78,8 @@ labels = (df['sec_response'] < success_time).values
 
 ping_ids = df['id'].values
 
-print str(ping_ids[:10])
-
 # set up cross-validation
-kfold = cross_validation.KFold(labels, n_folds=n_cv)
+kfold = cross_validation.StratifiedKFold(labels, n_folds=n_cv)
 # find minimum test data length
 min_len_test = len(df)
 for (train, test) in kfold:
@@ -113,9 +114,10 @@ for i, (train, test) in enumerate(kfold):
     # standardize test data lengths
     test = test[:min_len_test]
     
-    train_df = df.iloc[train]
-    test_df = df.iloc[test]
-    print str(test_df['id'][:10])
+    #train_df = df.iloc[train]
+    #test_df = df.iloc[test]
+    train_df = df.loc[df.index[train], :]
+    test_df = df.loc[df.index[test], :]
     
     # add tutor hourly response data
     if 'hourly_response' in selected_features or \
@@ -130,68 +132,75 @@ for i, (train, test) in enumerate(kfold):
             test_df, tutor_df)
             
             
-	# rescale features
-	# (move this to a function in processTools.py?)
-	print 'Rescaling features...'
-	new_features = []
-	dropped_features = []
-	for f in selected_features:
-		# skip hourly_response features since they haven't been added yet
-		# (also they don't really need to be rescaled)
-		if f not in ['hourly_response', 'weighted_hourly_response']:
-			feature_type = str(type(df[f].dropna()[0]))
-			#feature_type = str(type(df[f].dropna()[0]))
-			# map boolean values to -1/1
-			if 'bool' in feature_type:
-				train_df[f] = train_df[f].apply(lambda x: 1 if x else -1)
-				test_df[f] = test_df[f].apply(lambda x: 1 if x else -1)
-			else:
-				# map classes to multiple binary features
-				classes = set(df[f].dropna())
-				if len(classes) < max_classes:
-					if len(classes) <= 2:
-						train_df[f] = train_df[f].apply(lambda x: 1 if x == classes[0] else -1)
-						test_df[f] = test_df[f].apply(lambda x: 1 if x == classes[0] else -1)
-					else:
-						for c in classes:
-							trs = pd.Series(np.where(train_df[f] == c, 1, -1), 
-										  index=train_df.index)
-							train_df[f + str(c)] = trs
-							new_features.append(f + str(c))
-							train_df.drop(f, axis=1)
-							dropped_features.append(f)
-							tes = pd.Series(np.where(test_df[f] == c, 1, -1), 
-										  index=test_df.index)
-							test_df[f + str(c)] = tes
-							test_df.drop(f, axis=1)
+    # rescale features
+    # (move this to a function in processTools.py?)
+    print 'Rescaling features...'
+    train_df, rescaled_features = processTools.rescale_features(
+        train_df, selected_features, max_classes=max_classes)
+    test_df, rescaled_features = processTools.rescale_features(
+        test_df, selected_features, max_classes=max_classes)
 
-				else:
-					# transform variables
-					if 'transform' in selected_features[f]:
-						train_df[f] = train_df[f].apply(selected_features[f]['transform'])
-						test_df[f] = test_df[f].apply(selected_features[f]['transform'])
-						#rescale to (-1, 1) using given range
-					if 'range' in selected_features[f]:
-						f_min = selected_features[f]['range'][0]
-						f_ext = selected_features[f]['range'][1] - f_min
-						train_df[f] = train_df[f].apply(lambda x: 2.*(x-f_min)/f_ext - 1.)
-						test_df[f] = test_df[f].apply(lambda x: 2.*(x-f_min)/f_ext - 1.)
-					# if range not given, center on mean and scale to unit var.
-					else:
-						mean, std = (train_df[f].mean(), train_df[f].std())
-						train_df[f] = train_df[f].apply(lambda x: (x - mean)/std)
-						mean, std = (test_df[f].mean(), test_df[f].std())
-						test_df[f] = test_df[f].apply(lambda x: (x - mean)/std)
 
-					
-	rs_selected_features=selected_features.copy()
-	for f in new_features:
-		rs_selected_features[f] = {}
-	#for f in dropped_features:
-	#	dropped = selected_features.pop(f)
+    """
+    new_features = []
+    dropped_features = []
+    for f in selected_features:
+        # skip hourly_response features since they haven't been added yet
+        # (also they don't really need to be rescaled)
+        if f not in ['hourly_response', 'weighted_hourly_response']:
+            feature_type = str(type(df[f].dropna()[0]))
+            # map boolean values to -1/1
+            if 'bool' in feature_type:
+                train_df[f] = train_df[f].apply(lambda x: 1 if x else -1)
+                test_df[f] = test_df[f].apply(lambda x: 1 if x else -1)
+            else:
+                # map classes to multiple binary features
+                classes = set(df[f].dropna())
+                if len(classes) < max_classes:
+                    if len(classes) <= 2:
+                        train_df[f] = train_df[f].apply(lambda x: 1 if x == classes[0] else -1)
+                        test_df[f] = test_df[f].apply(lambda x: 1 if x == classes[0] else -1)
+                    else:
+                        for c in classes:
+                            trs = pd.Series(np.where(train_df[f] == c, 1, -1), 
+                                          index=train_df.index)
+                            train_df[f + str(c)] = trs
+                            new_features.append(f + str(c))
+                            train_df.drop(f, axis=1)
+                            dropped_features.append(f)
+                            tes = pd.Series(np.where(test_df[f] == c, 1, -1), 
+                                          index=test_df.index)
+                            test_df[f + str(c)] = tes
+                            test_df.drop(f, axis=1)
+
+                else:
+                    # transform variables
+                    if 'transform' in selected_features[f]:
+                        train_df[f] = train_df[f].apply(selected_features[f]['transform'])
+                        test_df[f] = test_df[f].apply(selected_features[f]['transform'])
+                        #rescale to (-1, 1) using given range
+                    if 'range' in selected_features[f]:
+                        f_min = selected_features[f]['range'][0]
+                        f_ext = selected_features[f]['range'][1] - f_min
+                        train_df[f] = train_df[f].apply(lambda x: 2.*(x-f_min)/f_ext - 1.)
+                        test_df[f] = test_df[f].apply(lambda x: 2.*(x-f_min)/f_ext - 1.)
+                    # if range not given, center on mean and scale to unit var.
+                    else:
+                        mean, std = (train_df[f].mean(), train_df[f].std())
+                        train_df[f] = train_df[f].apply(lambda x: (x - mean)/std)
+                        mean, std = (test_df[f].mean(), test_df[f].std())
+                        test_df[f] = test_df[f].apply(lambda x: (x - mean)/std)
+
+                    
+    rs_selected_features=selected_features.copy()
+    for f in new_features:
+        rs_selected_features[f] = {}
+    for f in dropped_features:
+       dropped = rs_selected_features.pop(f)
+    """
         
-    train_features = train_df[rs_selected_features.keys()].values
-    test_features = test_df[rs_selected_features.keys()].values
+    train_features = train_df[rescaled_features.keys()].values
+    test_features = test_df[rescaled_features.keys()].values
     
     # fit model to training data and compute predictions for test data
     model = classifier.fit(train_features, labels[train])
